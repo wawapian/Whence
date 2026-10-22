@@ -52,6 +52,8 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/whence-backend:latest
             ghcr.io/${{ github.repository_owner }}/whence-backend:${{ github.sha }}
           platforms: linux/amd64
+          # 不需要 attestation 产物，避免 registry 里出现 unknown/unknown 条目
+          provenance: false
           # 用 GitHub Actions 缓存依赖层，避免每次重新装一遍 torch/docling
           cache-from: type=gha
           cache-to: type=gha,mode=max
