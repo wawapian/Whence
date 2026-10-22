@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f7f8f6"><meta name="description" content="Whence · 来处：把文字、照片和文件留在本地，用一句话找回生活的来龙去脉——每条回答都指回它来自的记录或原件。">
+<title>Whence · 来处 · 本地记忆空间</title><link rel="icon" href="/assets/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">跳转到主要内容</a>
+<div id="app" class="app-shell">
+<aside class="sidebar" id="sidebar" aria-label="主导航">
+<a class="brand" href="#chat" aria-label="Whence · 来处 首页"><img src="/assets/mark.svg" width="42" height="42" alt=""><span><strong>Whence · 来处</strong><small>每一段记忆，都有来处。</small></span></a>
+<div class="workspace-label"><span class="status-dot"></span>我的本地空间<span class="personal-mark">个人</span></div><nav id="navigation"></nav>
+<div class="sidebar-note"><span class="note-sprout" aria-hidden="true">↗</span><p>记得的事，<br>慢慢成为你的第二大脑。</p><a href="#chat" data-action="focus-composer">留下一条记忆 <span aria-hidden="true">↗</span></a></div>
+<div class="sidebar-bottom"><button class="button export-button" data-action="export-markdown"><span data-icon="download"></span>导出 Markdown<span class="arrow">↗</span></button><button class="local-storage" data-action="privacy"><span data-icon="shield"></span><span><strong>由你保管，只为你记得</strong><small>本地存储 · 附件上云需授权</small></span></button></div>
+</aside><div class="sidebar-scrim" data-action="close-menu"></div>
+<div class="main-shell"><header class="topbar"><div class="breadcrumb"><button class="icon-button menu-button" data-action="menu" aria-label="打开导航" aria-expanded="false"><span data-icon="menu"></span></button><span>我的空间</span><span class="crumb-divider">/</span><strong id="breadcrumb-title">对话工作台</strong></div><div class="topbar-tools"><button class="connection-state" data-action="privacy"><span class="status-dot" id="connection-dot"></span><span id="connection-label">正在连接本地空间</span></button><button class="button subtle small model-settings-trigger" data-action="model-settings" title="模型设置" aria-label="模型设置"><span data-icon="settings"></span><span>模型设置</span></button><button class="icon-button" data-action="refresh" title="刷新数据" aria-label="刷新数据"><span data-icon="refresh"></span></button><span class="avatar" title="本机单用户空间" aria-label="我的本地空间">我</span></div></header>
+<div id="global-error" class="global-error" role="alert" hidden></div><main id="main" tabindex="-1"><div class="initial-loading" role="status">正在打开你的记忆空间…</div></main></div></div>
+<dialog id="detail-dialog" class="detail-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+<dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog"><span class="confirm-symbol" data-icon="info"></span><h2 id="confirm-title"></h2><p id="confirm-description"></p><div class="dialog-actions"><button value="cancel" class="button secondary">取消</button><button id="confirm-accept" value="accept" class="button danger">确认</button></div></form></dialog>
+<div class="toast-region" id="toasts" aria-live="polite" aria-atomic="false"></div><script type="module" src="/assets/bootstrap.js"></script>
+</body></html>

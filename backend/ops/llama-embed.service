@@ -1,0 +1,34 @@
+# 向量服务（bge-m3 Q8_0，:8094）—— systemd 模板
+#
+# 安装：把 <DEPLOY_DIR> 换成实际部署路径（例：/srv/memory-pendant），然后
+#   sudo cp llama-embed.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now llama-embed
+# 探活： curl http://127.0.0.1:8094/health  → {"status":"ok"}
+#
+# -c/-b/-ub 8192：本库有 6079 字的 chunk（OCR 图注）。窗口或批大小任一不够，都会让
+#          /v1/embeddings 返回 500（2026-10-16 实测：默认批大小下连 2718 字的都失败）。
+#          bge-m3 的上限就是 8192。
+# -t 4：服务器 4 核；调大不会更快（CPU 已饱和）。
+# --host 127.0.0.1：只监听本机——推理端口绝不能暴露到公网（无鉴权）。
+[Unit]
+Description=llama-server (embedding, bge-m3 Q8_0)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=<DEPLOY_DIR>/backend
+ExecStart=<DEPLOY_DIR>/backend/llama/llama-server \
+    -m models/bge-m3-Q8_0.gguf \
+    --embeddings \
+    -c 8192 \
+    -b 8192 \
+    -ub 8192 \
+    -t 4 \
+    --port 8094 \
+    --host 127.0.0.1
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

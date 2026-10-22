@@ -1,0 +1,29 @@
+# 重排服务（bge-reranker-base Q8_0，:8095）—— systemd 模板
+#
+# 安装：把 <DEPLOY_DIR> 换成实际部署路径，然后
+#   sudo cp llama-rerank.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now llama-rerank
+# 探活： curl http://127.0.0.1:8095/health  → {"status":"ok"}
+#
+# --reranking + --pooling rank：重排必须切 rank 池化，否则打分不是相关性分数。
+# --host 127.0.0.1：只监听本机（无鉴权，不得暴露公网）。
+[Unit]
+Description=llama-server (reranker, bge-reranker-base Q8_0)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=<DEPLOY_DIR>/backend
+ExecStart=<DEPLOY_DIR>/backend/llama/llama-server \
+    -m models/bge-reranker-base-Q8_0.gguf \
+    --reranking \
+    --pooling rank \
+    -t 4 \
+    --port 8095 \
+    --host 127.0.0.1
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
