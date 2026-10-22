@@ -1,1 +1,1 @@
-本机可放置 llama.cpp 服务程序及依赖。二进制不纳入 Git；换系统应重新下载相应构建。详见 ../../docs/本地模型.md。
+把 llama.cpp 的 llama-server.exe 与同批 DLL 放在本目录，下载来源见根目录 README 的“准备工作”。

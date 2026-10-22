@@ -4,9 +4,9 @@
 
 把文字、照片和文件留在本地，用一句话找回生活的来龙去脉——每条回答都指回它来自的记录或原件。
 
-英文名 **Whence** 读 /wɛns/，意为“从何处来”；中文名 **来处**。记忆不只要存得住，更要答得清、查得回——这是名字，也是这个项目存在的理由。
+英文名 **Whence** 读 /wɛns/，意为“从何处来”；中文名 **来处**。记忆不只要存得住，更要答得清、查得回。
 
-本仓库是 Whence · 来处 的本地开源版：完整前后端、模型设置、记录、原件库、历史、时间线、提醒和回收站。这里的“本地”指数据默认保存在本机；文字抽取与问答仍可能调用你配置的外部模型。
+Whence · 来处 是一套本地优先的个人记忆应用，完整前后端都在这里：模型设置、记录、原件库、历史、时间线、提醒和回收站。这里的“本地”指数据默认保存在本机；文字抽取与问答仍可能调用你配置的外部模型。
 
 ## 它能做什么
 
@@ -18,52 +18,62 @@
 
 ## 数据与隐私
 
-- 记录、附件、SQLite 数据库与加密密钥默认在本机 `backend/data/`，不随仓库分发。
+- 记录、附件、SQLite 数据库与加密密钥默认在本机 `backend/data/`。
 - 敏感信息在写入前于本地打码，密文由本机生成的 `backend/data/secret.key` 加密。
-- 只有在你明确授权后，相关内容才会发送给你配置的外部模型服务；项目不上传遥测。
-- 仓库不包含数据库、`.env`、个人数据、模型权重或推理二进制。
+- 只有在你明确授权后，相关内容才会发送给你配置的外部模型服务；应用不上传遥测。
+
+## 准备工作：两个本地模型和 llama.cpp
+
+检索用的两个模型需要你自己下载，放到 `backend/models/`：
+
+| 文件 | 用途 | 官方模型卡 |
+| --- | --- | --- |
+| `bge-m3-Q8_0.gguf` | 文本向量 | https://huggingface.co/BAAI/bge-m3 |
+| `bge-reranker-base-Q8_0.gguf` | 重排 | https://huggingface.co/BAAI/bge-reranker-base |
+
+模型卡提供的是原始权重，需要转成 GGUF 或使用可信的 GGUF 版本，并核对来源、版本、量化方式和许可证。
+
+推理程序用 llama.cpp：从 https://github.com/ggml-org/llama.cpp/releases 下载与系统匹配的构建，把 `llama-server.exe` 及同批 DLL 放进 `backend/llama/`。启动应用时会自动用它拉起嵌入服务（8094）和重排服务（8095）。
 
 ## 快速开始（Windows）
 
 1. 安装 Python 3.11+，双击 `setup.bat` 创建 `.venv` 并安装依赖。
-2. 按 [本地模型说明](docs/本地模型.md) 下载两个 GGUF 放入 `backend/models/`，下载 llama.cpp 放入 `backend/llama/`。仓库不附带这些文件。
+2. 按上一节放好两个 GGUF 与 `llama-server.exe`。
 3. 双击 `start-workspace.bat`，浏览器打开 http://127.0.0.1:8000/#chat 。
-4. 在页面“模型设置”里填自己的服务地址、模型 ID 和 Key。
+4. 在页面“模型设置”里填写外部模型的服务地址、模型 ID 和 Key。
 5. 双击 `stop-workspace.bat` 停止服务。
 
 ## 开发者安装
 
-需要 Python 3.11+。Windows 可运行 `setup.bat`；也可在 backend 中用 `uv sync --locked`（开发测试含 dev 依赖），或创建 `.venv` 后用 `python -m pip install -e .`。复制 `.env.example` 为 `.env`，按 [本地模型说明](docs/本地模型.md) 放置匹配系统的 GGUF 和 llama.cpp 二进制，然后启动。
+需要 Python 3.11+。在 `backend/` 中用 `uv sync --locked`（含测试依赖），或创建 `.venv` 后 `python -m pip install -e .`。复制 `.env.example` 为 `.env`，按上一节放好模型与 llama.cpp，然后启动。
 
-Linux / macOS：先独立启动嵌入与重排服务，配置对应地址，在 backend 中执行 `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`。前端由后端同源提供，无需 Node、前端构建或单独启动。
+Linux / macOS：按 llama.cpp server 的文档启动嵌入与重排两个服务，把地址写进 `.env` 的 `LLAMA_EMBED_URL` / `LLAMA_RERANK_URL`，再在 `backend/` 中执行：
 
-模型权重、llama.cpp 二进制、Python 环境和运行数据都被 `.gitignore` 排除，`backend/models/` 与 `backend/llama/` 只保留说明文件；请按 [本地模型说明](docs/本地模型.md) 自行下载并核对来源、版本、量化与许可证。
+```bash
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+前端由后端同源提供，不需要 Node 或单独构建。
 
 ## 目录
 
 ```text
-frontend/                 完整本机前端
+frontend/                 完整前端
 backend/app/              API、模型客户端、业务与数据处理
 backend/tests/            业务与接口测试
 backend/scripts/          启动、重建索引和维护工具
 backend/ops/              本地模型 Linux 服务参考模板
 backend/pyproject.toml     依赖定义
 backend/uv.lock            依赖锁文件
-backend/.env.example       无密钥配置模板
-backend/models/            本地模型（Git 忽略）
-backend/llama/             本地推理程序（Git 忽略）
-backend/.venv/             本机 Python 环境（Git 忽略）
-backend/data/              首次使用后生成的数据和加密密钥（Git 忽略）
-backend/.runtime/          运行日志与进程记录（Git 忽略）
-docs/本地模型.md           模型下载、分发、替换及重建索引
-start-workspace.bat        启动本机版
-stop-workspace.bat         停止本目录服务
-setup.bat                  在新电脑安装 Python 依赖
-LICENSE                    项目现有 MIT 许可证
+backend/.env.example       配置模板
+backend/models/            放本地模型文件
+backend/llama/             放 llama.cpp 推理程序
+backend/data/              运行数据（首次启动生成）
+backend/.runtime/          运行日志
+start-workspace.bat        启动
+stop-workspace.bat         停止
+setup.bat                  安装 Python 依赖
+LICENSE                    MIT 许可证
 ```
 
 应用是本机单用户工具，无账号鉴权；默认只监听回环地址，不应直接暴露到公网。
-
-## 仓库边界
-
-只提交源码、文档、LICENSE、配置模板与 `uv.lock`；`.env`、任何 Key、个人数据、数据库、模型权重、二进制、虚拟环境与日志都不入库。请不要在提交中带入本机数据。
