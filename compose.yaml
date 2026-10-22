@@ -1,0 +1,53 @@
+# Whence · 来处 —— 三个容器：两个 llama.cpp 推理服务 + 一个 FastAPI 后端
+# 浏览器只访问 127.0.0.1:8000，两个推理端口不对外暴露（无鉴权，绝不能公网可达）。
+name: whence
+
+services:
+  # 向量服务：bge-m3 Q8_0，端口 8094
+  embed:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: whence-embed
+    restart: unless-stopped
+    command: ["-m", "/models/bge-m3-Q8_0.gguf", "--embeddings", "-c", "8192", "-b", "8192", "-ub", "8192", "-t", "4", "--port", "8094", "--host", "0.0.0.0"]
+    # 官方镜像自带的 HEALTHCHECK 探测 8080，这里换了端口就会一直 unhealthy；
+    # 实际 /health 已由 backend 验证通过，故关掉镜像自带检查
+    healthcheck:
+      disable: true
+    volumes:
+      - ./backend/models:/models:ro
+
+  # 重排服务：bge-reranker-base Q8_0，端口 8095；--pooling rank 才能出相关性分数
+  rerank:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: whence-rerank
+    restart: unless-stopped
+    command: ["-m", "/models/bge-reranker-base-Q8_0.gguf", "--reranking", "--pooling", "rank", "-t", "4", "--port", "8095", "--host", "0.0.0.0"]
+    healthcheck:
+      disable: true
+    volumes:
+      - ./backend/models:/models:ro
+
+  backend:
+    # 默认使用 GitHub Actions 构建好的镜像（docker compose pull 拉取）；
+    # 想用自己的代码构建，加 --build 即可，构建出的镜像与原 tag 同名。
+    image: ghcr.io/wawapian/whence-backend:latest
+    build:
+      context: .
+    container_name: whence-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATA_DIR: /data
+      LLAMA_EMBED_URL: http://embed:8094
+      LLAMA_RERANK_URL: http://rerank:8095
+      # backend/.env 里 VLM_MODEL= 这一行行尾带中文注释，compose 的 env_file
+      # 把注释也当成了值；这里强制清空（要开图片理解就改这里填模型名并配 VLM_API_KEY）
+      VLM_MODEL: ""
+    volumes:
+      - ./backend/data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - embed
+      - rerank

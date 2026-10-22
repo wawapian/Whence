@@ -27,6 +27,33 @@
 
 推理程序用 llama.cpp：从 https://github.com/ggml-org/llama.cpp/releases 下载与系统匹配的构建，把 `llama-server.exe` 及同批 DLL 放进 `backend/llama/`。启动应用时会自动用它拉起嵌入服务（8094）和重排服务（8095）。
 
+## Docker 部署（推荐，不用装 Python）
+
+只需 Docker（Windows / macOS 用 [Docker Desktop](https://www.docker.com/products/docker-desktop/)，Linux 用 docker engine + compose 插件），
+Python、llama.cpp、依赖全在容器里，不用 `setup.bat`。
+
+1. 按上一节把两个 GGUF 放进 `backend/models/`（llama.cpp 容器直接读这个目录，**不需要** `backend/llama/`）。
+2. 复制配置并填入外部模型 Key：
+
+   ```bash
+   cp backend/.env.example backend/.env   # 至少填 LLM_API_KEY
+   ```
+
+3. 拉镜像并启动（镜像由 GitHub Actions 自动构建并发布到 GHCR）：
+
+   ```bash
+   docker compose pull   # 拉取后端镜像，约 3 GB，只需一次
+   docker compose up -d  # 启动 backend + embed + rerank 三个容器
+   ```
+
+4. 浏览器打开 http://127.0.0.1:8000 。
+
+- 数据在 `backend/data/`（挂载进容器），删容器不会丢数据；备份就是备份这个目录。
+- 只有 `127.0.0.1:8000` 对外，两个推理端口不暴露。
+- 想用自己改的代码构建：`docker compose up -d --build`（首次约 20–30 分钟，镜像含 CUDA 运行库所以偏大）。
+- 停止：`docker compose down`。
+- 镜像目前只构建 `linux/amd64`；Apple Silicon 需要 Rosetta，或改用下文的开发者安装方式。
+
 ## 快速开始（Windows）
 
 1. 安装 Python 3.11+，双击 `setup.bat` 创建 `.venv` 并安装依赖。
@@ -51,6 +78,9 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 ```text
 frontend/                 完整前端
+Dockerfile                后端镜像定义（供 docker compose / GHCR 使用）
+compose.yaml              三个容器的编排（backend + embed + rerank）
+.github/workflows/        推代码后自动构建镜像并发布到 GHCR
 backend/app/              API、模型客户端、业务与数据处理
 backend/tests/            业务与接口测试
 backend/scripts/          启动、重建索引和维护工具

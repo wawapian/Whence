@@ -1,0 +1,14 @@
+.git
+.venv
+**/__pycache__
+*.pyc
+*.pyo
+backend/.env
+backend/.runtime
+backend/.pytest_cache
+backend/data
+backend/llama
+backend/models
+backend/tests
+backend/uv.lock.bak
+node_modules
